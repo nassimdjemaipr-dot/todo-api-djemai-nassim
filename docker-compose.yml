@@ -1,3 +1,5 @@
+name: todo-api
+
 services:
   api:
     build: .
@@ -15,6 +17,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - frontend
+      - backend
     restart: unless-stopped
 
   db:
@@ -28,11 +33,17 @@ services:
       - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U todo_user -d todo_db"]
       interval: 5s
       timeout: 3s
       retries: 5
+
+networks:
+  frontend:   # reseau d'exposition (api accessible)
+  backend:    # reseau prive (base de donnees isolee)
 
 volumes:
   postgres-data:
