@@ -64,6 +64,8 @@ docker rm todo-writer todo-reader
 docker run -it --name todo-reader -v todo-logs:/data node:22-alpine sh
 /data # cat first_log.log
 mon premier log
+<img width="1558" height="890" alt="image" src="https://github.com/user-attachments/assets/97ea79eb-0db9-43fd-9595-cd1d6d7bf8f1" />
+
 ```
 
 ## Gestion de projet (Agile / Kanban)
