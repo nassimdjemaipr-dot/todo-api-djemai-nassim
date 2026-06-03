@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 
 // Stockage en memoire (local)
 let tasks = [];
@@ -14,7 +14,7 @@ function getById(id) {
 function create({ title, description, status }) {
   const now = new Date().toISOString();
   const task = {
-    id: uuidv4(),
+    id: randomUUID(),
     title,
     description: description || '',
     status: status || 'pending',
