@@ -1,45 +1,45 @@
-const { randomUUID } = require('crypto');
+const { pool } = require('../db');
 
-// Stockage en memoire (local)
-let tasks = [];
+const COLS = 'id, title, description, status, created_at AS "createdAt", updated_at AS "updatedAt"';
 
-function getAll() {
-  return tasks;
+async function getAll() {
+  const result = await pool.query(`SELECT ${COLS} FROM tasks ORDER BY created_at DESC`);
+  return result.rows;
 }
 
-function getById(id) {
-  return tasks.find((t) => t.id === id);
+async function getById(id) {
+  const result = await pool.query(`SELECT ${COLS} FROM tasks WHERE id = $1`, [id]);
+  return result.rows[0];
 }
 
-function create({ title, description, status }) {
-  const now = new Date().toISOString();
-  const task = {
-    id: randomUUID(),
-    title,
-    description: description || '',
-    status: status || 'pending',
-    createdAt: now,
-    updatedAt: now,
-  };
-  tasks.push(task);
-  return task;
+async function create({ title, description, status }) {
+  const result = await pool.query(
+    `INSERT INTO tasks (title, description, status)
+     VALUES ($1, $2, $3)
+     RETURNING ${COLS}`,
+    [title, description || '', status || 'pending']
+  );
+  return result.rows[0];
 }
 
-function update(id, data) {
-  const task = getById(id);
-  if (!task) return null;
-  if (data.title !== undefined) task.title = data.title;
-  if (data.description !== undefined) task.description = data.description;
-  if (data.status !== undefined) task.status = data.status;
-  task.updatedAt = new Date().toISOString();
-  return task;
+async function update(id, data) {
+  const existing = await getById(id);
+  if (!existing) return null;
+  const title = data.title !== undefined ? data.title : existing.title;
+  const description = data.description !== undefined ? data.description : existing.description;
+  const status = data.status !== undefined ? data.status : existing.status;
+  const result = await pool.query(
+    `UPDATE tasks SET title = $1, description = $2, status = $3, updated_at = NOW()
+     WHERE id = $4
+     RETURNING ${COLS}`,
+    [title, description, status, id]
+  );
+  return result.rows[0];
 }
 
-function remove(id) {
-  const index = tasks.findIndex((t) => t.id === id);
-  if (index === -1) return false;
-  tasks.splice(index, 1);
-  return true;
+async function remove(id) {
+  const result = await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
+  return result.rowCount > 0;
 }
 
 module.exports = { getAll, getById, create, update, remove };

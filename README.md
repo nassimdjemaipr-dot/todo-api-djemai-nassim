@@ -1,23 +1,24 @@
 # TODO API - DJEMAI Nassim
 
-API REST de gestion de tâches (Todo) développée avec Node.js / Express, conteneurisée avec Docker et préparée pour la CI/CD.
+API REST de gestion de tâches (Todo) développée avec Node.js / Express, persistée dans PostgreSQL, conteneurisée avec Docker (Docker Compose) et préparée pour la CI/CD.
 
 ## Présentation du projet
 
-Cette API permet de gérer des tâches (Tasks) via une API REST : créer, lister, consulter, modifier et supprimer des tâches (opérations CRUD). Les données sont actuellement stockées en mémoire (stockage local).
+Cette API permet de gérer des tâches (Tasks) via une API REST : créer, lister, consulter, modifier et supprimer des tâches (opérations CRUD). Les données sont stockées dans une base de données PostgreSQL, et persistent grâce à un volume Docker.
 
 ## Stack technique
 
-- Node.js (runtime)
-- Express (framework web)
-- Helmet (sécurité des en-têtes HTTP)
-- CORS (gestion des requêtes cross-origin)
-- Docker (conteneurisation)
+- Node.js + Express (API)
+- PostgreSQL (base de données)
+- pg (client PostgreSQL) + dotenv (variables d'environnement)
+- Helmet + CORS (sécurité)
+- Docker + Docker Compose (conteneurisation)
+- Jest + Supertest (tests)
 
 ## Prérequis
 
-- Node.js 18 ou supérieur, OU
-- Docker
+- Docker + Docker Compose (recommandé)
+- (Optionnel, pour le dev sans Docker) Node.js 18+ et un PostgreSQL accessible
 
 ## Installation et lancement
 
@@ -28,25 +29,47 @@ git clone https://github.com/nassimdjemaipr-dot/todo-api-djemai-nassim.git
 cd todo-api-djemai-nassim
 ```
 
-### Avec Node.js
+### Avec Docker Compose (recommandé)
+
+Lance l'API et la base PostgreSQL en une commande :
+
+```bash
+docker compose up -d --build
+```
+
+L'application est accessible sur http://localhost:3000
+
+Pour tout arrêter :
+
+```bash
+docker compose down
+```
+
+(Le volume `postgres-data` conserve les données entre les redémarrages. Pour tout supprimer, y compris les données : `docker compose down -v`.)
+
+### Avec Node.js (dev local)
+
+Nécessite un PostgreSQL accessible (par exemple `docker compose up -d db`) :
 
 ```bash
 npm install
 npm start
 ```
 
-L'application est accessible sur http://localhost:3000
+## Variables d'environnement
 
-### Avec Docker
+La configuration se fait via des variables d'environnement (voir `.env.example`) :
 
-```bash
-docker build -t todo-api-djemai-nassim:1.0 .
-docker run -p 3000:3000 todo-api-djemai-nassim:1.0
-```
+| Variable | Description | Valeur par défaut |
+|-------------|------------------------------|-------------|
+| PORT | Port de l'API | 3000 |
+| DB_HOST | Hôte PostgreSQL | localhost |
+| DB_PORT | Port PostgreSQL | 5432 |
+| DB_NAME | Nom de la base | todo_db |
+| DB_USER | Utilisateur | todo_user |
+| DB_PASSWORD | Mot de passe | todo_pass |
 
-L'application est accessible sur http://localhost:3000
-
-Le port peut être personnalisé avec la variable d'environnement PORT.
+En Docker Compose, ces variables sont définies dans le `docker-compose.yml`.
 
 ## Endpoints de l'API
 
@@ -59,24 +82,12 @@ Le port peut être personnalisé avec la variable d'environnement PORT.
 | PUT | /api/tasks/:id | Modifier une tâche |
 | DELETE | /api/tasks/:id | Supprimer une tâche |
 
-### Exemples avec curl
+### Exemple avec curl
 
 ```bash
-# Créer une tâche
 curl -X POST http://localhost:3000/api/tasks \
   -H "Content-Type: application/json" \
   -d '{"title":"Faire les courses","description":"lait, pain","status":"pending"}'
-
-# Lister les tâches
-curl http://localhost:3000/api/tasks
-
-# Modifier une tâche
-curl -X PUT http://localhost:3000/api/tasks/<id> \
-  -H "Content-Type: application/json" \
-  -d '{"status":"done"}'
-
-# Supprimer une tâche
-curl -X DELETE http://localhost:3000/api/tasks/<id>
 ```
 
 ## Modèle de données (Task)
@@ -92,11 +103,14 @@ curl -X DELETE http://localhost:3000/api/tasks/<id>
 }
 ```
 
-- id : identifiant unique généré automatiquement
-- title : titre de la tâche (obligatoire)
-- description : description de la tâche (optionnel)
-- status : état de la tâche (ex : pending, done)
-- createdAt / updatedAt : dates de création et de dernière modification (automatiques)
+## Tests
+
+Les tests (Jest + Supertest) nécessitent une base PostgreSQL accessible. Lance d'abord la base, puis les tests :
+
+```bash
+docker compose up -d db
+npm test
+```
 
 ## Structure du projet
 
@@ -106,16 +120,21 @@ todo-api/
 │   ├── routes/
 │   │   └── tasks.js          # Routes CRUD des tâches
 │   ├── models/
-│   │   └── task.js           # Modèle et stockage des tâches
+│   │   └── task.js           # Modèle (requêtes SQL)
 │   ├── middleware/
 │   │   └── errorHandler.js   # Gestion centralisée des erreurs
-│   └── app.js                # Configuration Express et démarrage du serveur
-├── tests/                    # Tests (à développer)
+│   ├── db/
+│   │   └── index.js          # Connexion PostgreSQL + init de la table
+│   └── app.js                # Configuration Express et démarrage
+├── tests/
 │   ├── unit/
+│   │   └── task.test.js
 │   └── integration/
+│       └── api.test.js
 ├── Dockerfile
 ├── .dockerignore
 ├── .gitignore
+├── .env.example
 ├── docker-compose.yml
 ├── package.json
 └── README.md
@@ -123,17 +142,15 @@ todo-api/
 
 ## Gestion de projet (Agile / Scrum / Kanban)
 
-Ce projet est réalisé en solo. La méthodologie retenue est le **Kanban**, bien adaptée au travail individuel grâce à sa simplicité et à sa gestion continue des tâches (pas de sprints figés).
+Ce projet est réalisé en solo. La méthodologie retenue est le Kanban, bien adaptée au travail individuel grâce à sa simplicité et à sa gestion continue des tâches.
 
 ### Outils
 
 - Tableau Kanban via GitHub Projects
 - Suivi des tâches et bugs via GitHub Issues
-- Historique et versionnement via Git / GitHub
+- Workflow Git : une branche + une Pull Request par fonctionnalité (pas de commit direct sur master)
 
 ### Tableau Kanban
-
-Le travail est organisé en colonnes :
 
 | Colonne | Rôle |
 |--------------|---------------------------------------------|
@@ -155,8 +172,9 @@ Le travail est organisé en colonnes :
 Une tâche est considérée comme terminée lorsque :
 
 - la fonctionnalité est codée et fonctionne en local,
-- elle fonctionne également dans le conteneur Docker,
-- le code est commité et poussé sur GitHub.
+- elle fonctionne dans les conteneurs Docker,
+- les tests passent,
+- le code est commité et poussé sur GitHub via une Pull Request.
 
 ## Auteur
 

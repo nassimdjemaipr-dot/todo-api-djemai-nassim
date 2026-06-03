@@ -1,7 +1,16 @@
 const request = require('supertest');
 const app = require('../../src/app');
+const { pool, initDb } = require('../../src/db');
 
-describe('API Tasks (test d\'integration)', () => {
+beforeAll(async () => {
+  await initDb();
+});
+
+afterAll(async () => {
+  await pool.end();
+});
+
+describe('API Tasks (test d integration)', () => {
   test('GET /health retourne 200 et status ok', async () => {
     const res = await request(app).get('/health');
     expect(res.statusCode).toBe(200);
@@ -29,7 +38,7 @@ describe('API Tasks (test d\'integration)', () => {
   });
 
   test('GET /api/tasks/:id inexistant retourne 404', async () => {
-    const res = await request(app).get('/api/tasks/id-qui-nexiste-pas');
+    const res = await request(app).get('/api/tasks/00000000-0000-0000-0000-000000000000');
     expect(res.statusCode).toBe(404);
   });
 });
