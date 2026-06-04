@@ -89,11 +89,14 @@ Métrique principale : `http_requests_total` (nombre de requêtes par méthode, 
 
 Dashboard Grafana :
 
-<!-- Colle ta capture du dashboard Grafana ici (en dehors des blocs de code) -->
+<img width="1606" height="939" alt="image" src="https://github.com/user-attachments/assets/5cf07b55-283c-43ee-9da8-9aacd255d2d2" />
+
+
 
 Cibles Prometheus (cible `todo-api` en `up`) :
 
-<!-- Colle ta capture de Prometheus > Status > Targets ici -->
+<img width="1918" height="545" alt="image" src="https://github.com/user-attachments/assets/5fd69739-3e35-4317-b8d1-7098889ec8d7" />
+
 
 ## Gestion de projet (Agile / Kanban)
 
