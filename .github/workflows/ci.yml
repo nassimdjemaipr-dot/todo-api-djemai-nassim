@@ -1,0 +1,57 @@
+name: CI
+
+# Declencheurs : a chaque push sur master, et a chaque pull request vers master
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Service PostgreSQL lance a cote du job (comme services: dans GitLab-CI)
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: todo_db
+          POSTGRES_USER: todo_user
+          POSTGRES_PASSWORD: todo_pass
+        ports:
+          - 5432:5432
+        # On attend que Postgres soit vraiment pret (healthy) avant les tests
+        options: >-
+          --health-cmd "pg_isready -U todo_user -d todo_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Variables d'environnement lues par l'app pour se connecter a la base
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: todo_db
+      DB_USER: todo_user
+      DB_PASSWORD: todo_pass
+
+    steps:
+      # 1. Recuperer le code
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      # 2. Installer Node.js 18 + cache des dependances npm
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # 3. Installer les dependances de maniere deterministe
+      - name: Installer les dependances
+        run: npm ci
+
+      # 4. Lancer les tests (Jest) : tests unitaires + integration
+      - name: Lancer les tests
+        run: npm test
