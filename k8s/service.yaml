@@ -1,0 +1,15 @@
+# Service de la Todo API : une adresse stable + repartition du trafic entre les pods.
+# type NodePort = accessible depuis l'exterieur du cluster, sur un port du noeud.
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-api-service
+spec:
+  selector:
+    app: todo-api          # cible les pods etiquetes app=todo-api
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 80             # port expose par le Service (dans le cluster)
+      targetPort: 3000     # port de l'app dans le pod
+      nodePort: 30080      # port accessible depuis la machine : http://localhost:30080
