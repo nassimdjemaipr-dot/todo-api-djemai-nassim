@@ -1,0 +1,51 @@
+# Stack de monitoring locale : Todo API + PostgreSQL + Prometheus + Grafana.
+# Lancement : docker compose -f docker-compose.monitoring.yml up -d --build
+name: todo-api-monitoring
+
+services:
+  todo-api:
+    build: .
+    container_name: todo-api-mon
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=todo_db
+      - DB_USER=todo_user
+      - DB_PASSWORD=todo_pass
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped   # relance l'API si elle crashe (ex: BD pas encore prete)
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: todo_db
+      POSTGRES_USER: todo_user
+      POSTGRES_PASSWORD: todo_pass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todo_user -d todo_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      # On monte notre config dans le conteneur
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - todo-api
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"   # Grafana sur 3001 pour eviter le conflit avec todo-api (3000)
+    depends_on:
+      - prometheus

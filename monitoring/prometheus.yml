@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s          # Prometheus interroge les cibles toutes les 15s
+
+scrape_configs:
+  - job_name: 'todo-api'
+    static_configs:
+      # On scrape l'app par son nom de service docker-compose, sur son port interne
+      - targets: ['todo-api:3000']
