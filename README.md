@@ -69,6 +69,32 @@ mon premier log
 ```
 <img width="1558" height="890" alt="image" src="https://github.com/user-attachments/assets/97ea79eb-0db9-43fd-9595-cd1d6d7bf8f1" />
 
+## Monitoring (Prometheus + Grafana)
+
+L'API expose ses métriques sur `/metrics` (via `prom-client`). Prometheus les collecte et Grafana les visualise.
+
+Lancer la stack complète (API + PostgreSQL + Prometheus + Grafana) :
+
+```bash
+docker compose -f docker-compose.monitoring.yml up -d --build
+```
+
+- API : http://localhost:3000 (`/metrics` pour les métriques brutes)
+- Prometheus : http://localhost:9090 (onglet Status > Targets)
+- Grafana : http://localhost:3001 (login par défaut : `admin` / `admin`)
+
+Métrique principale : `http_requests_total` (nombre de requêtes par méthode, route et statut).
+
+### Visualisation
+
+Dashboard Grafana :
+
+<!-- Colle ta capture du dashboard Grafana ici (en dehors des blocs de code) -->
+
+Cibles Prometheus (cible `todo-api` en `up`) :
+
+<!-- Colle ta capture de Prometheus > Status > Targets ici -->
+
 ## Gestion de projet (Agile / Kanban)
 
 - Projet réalisé en **solo**, en méthode **Kanban** (GitHub Projects + Issues)
