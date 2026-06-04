@@ -1,0 +1,47 @@
+# Deployment de la Todo API : K8s maintient en permanence le nombre de pods voulu.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-api
+  labels:
+    app: todo-api
+spec:
+  replicas: 2                      # JE VEUX 2 copies (pods) qui tournent en permanence
+  selector:
+    matchLabels:
+      app: todo-api                # ce Deployment gere les pods etiquetes app=todo-api
+  template:                        # le "moule" de chaque pod
+    metadata:
+      labels:
+        app: todo-api
+    spec:
+      containers:
+        - name: todo-api
+          image: nassimdjemai/todo-api:latest   # l'image poussee sur DockerHub (phase 3)
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: DB_HOST
+              value: "postgres-service"          # le nom du Service Postgres
+            - name: DB_PORT
+              value: "5432"
+            # Les identifiants viennent du Secret (jamais en clair ici)
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: todo-db-secret
+                  key: POSTGRES_DB
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: todo-db-secret
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: todo-db-secret
+                  key: POSTGRES_PASSWORD
